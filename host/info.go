@@ -26,6 +26,7 @@ type ServerInfo struct {
 	Thread       int     `json:"thread"`
 	TCP          int     `json:"tcp"`
 	UDP          int     `json:"udp"`
+	Version      string  `json:"version"`
 }
 
 func GetHostInfo(interval int) string {
@@ -45,6 +46,8 @@ func GetHostInfo(interval int) string {
 
 	processCount, threadCount, _ := getProcessAndThread()
 	tcpCount, udpCount, _ := getConnections()
+
+	version := getVersion()
 
 	serverInfo := ServerInfo{
 		Interval:     interval,
@@ -68,6 +71,7 @@ func GetHostInfo(interval int) string {
 		Thread:       threadCount,
 		TCP:          tcpCount,
 		UDP:          udpCount,
+		Version:      version,
 	}
 
 	jsonData, _ := json.MarshalIndent(&serverInfo, "", "  ")

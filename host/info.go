@@ -29,7 +29,7 @@ type ServerInfo struct {
 	Version      string  `json:"version"`
 }
 
-func GetHostInfo(interval int) string {
+func GetHostInfo(interval int, cmdStr string) string {
 	uptime, system, _ := getSystemInfo()
 
 	cpuCores := getCPUCores()
@@ -47,7 +47,7 @@ func GetHostInfo(interval int) string {
 	processCount, threadCount, _ := getProcessAndThread()
 	tcpCount, udpCount, _ := getConnections()
 
-	version := getVersion()
+	version := getVersion(cmdStr)
 
 	serverInfo := ServerInfo{
 		Interval:     interval,
@@ -74,6 +74,6 @@ func GetHostInfo(interval int) string {
 		Version:      version,
 	}
 
-	jsonData, _ := json.MarshalIndent(&serverInfo, "", "  ")
+	jsonData, _ := json.Marshal(&serverInfo)
 	return string(jsonData)
 }

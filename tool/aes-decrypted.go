@@ -18,10 +18,10 @@ func NewAESCipher(key string) *AESCipher {
 	return &AESCipher{byteKey}
 }
 
-func (c *AESCipher) Encrypt(plaintext string) string {
+func (c *AESCipher) Encrypt(plaintext string) (string, error) {
 	block, err := aes.NewCipher(c.key)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	plaintextBytes := []byte(plaintext)
@@ -30,7 +30,7 @@ func (c *AESCipher) Encrypt(plaintext string) string {
 	ciphertext := make([]byte, aes.BlockSize+len(plaintextBytes))
 	iv := ciphertext[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		panic(err)
+		return "", err
 	}
 
 	mode := cipher.NewCBCEncrypter(block, iv)
@@ -38,21 +38,21 @@ func (c *AESCipher) Encrypt(plaintext string) string {
 
 	encoded := base64.StdEncoding.EncodeToString(ciphertext)
 	if len(encoded) > 128 {
-		panic("encrypted text too long")
+		return "", err
 	}
 
-	return encoded
+	return encoded, nil
 }
 
-func (c *AESCipher) Decrypt(ciphertext string) string {
+func (c *AESCipher) Decrypt(ciphertext string) (string, error) {
 	ciphertextBytes, err := base64.StdEncoding.DecodeString(ciphertext)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	block, err := aes.NewCipher(c.key)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	if len(ciphertextBytes) < aes.BlockSize {
@@ -64,7 +64,7 @@ func (c *AESCipher) Decrypt(ciphertext string) string {
 	mode := cipher.NewCBCDecrypter(block, iv)
 	mode.CryptBlocks(ciphertextBytes, ciphertextBytes)
 
-	return string(pkcs7Unpad(ciphertextBytes))
+	return string(pkcs7Unpad(ciphertextBytes)), nil
 }
 
 func pkcs7Pad(src []byte, blockSize int) []byte {

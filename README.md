@@ -9,14 +9,45 @@ go mod tidy
 bo build
 ```
 
-## 调试
-不给任何参数，则只输出主机信息到控制台
+## 命令使用
+
+### 命令帮助
 
 ```shell
-./GoMonitor
+./GoMonitor --help
 ```
 
-输出内容：
+输出帮助指导：
+
+```shell
+NAME:
+   GoMonitor - 一个简单的agent客户端，用于采集主机信息并上报到服务端
+
+USAGE:
+   GoMonitor [global options] command [command options] 
+
+VERSION:
+   0.0.1
+
+COMMANDS:
+   collect  采集主机信息
+   decrypt  解密密钥，并显示原文
+   report   采集主机信息，并解析密钥，将信息上报到服务端，非调试模式不输出任何信息
+   help, h  Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --help, -h     show help
+   --version, -v  print the version
+
+```
+
+### 采集命令
+只采集主机信息并输出，不上报
+
+```shell
+./GoMonitor collect -i 5
+```
+
 ```json
 {
   "interval": 5,
@@ -39,15 +70,30 @@ bo build
   "process": 171,
   "thread": 249,
   "tcp": 7,
-  "udp": 1
+  "udp": 1,
+  "version": ""
 }
 ```
 
-## 后台运行
+### 上报命令
 
 ```shell
-./GoMonitor ${SecretKey} ${SecretValue}  ${Interval} > /dev/null &
+./GoMonitor report --help
 ```
-- SecretKey：密钥的Key
-- SecretValue：密钥的值
-- Interval：上报间隔(单位：秒)
+
+```shell
+NAME:
+   GoMonitor report - 采集主机信息，并解析密钥，将信息上报到服务端，非调试模式不输出任何信息
+
+USAGE:
+   GoMonitor report [command options] [arguments...]
+
+OPTIONS:
+   --key value, -k value       解密Key
+   --secret value, -s value    待解密的密文
+   --interval value, -i value  采集间隔时间（默认值：6） (default: 6)
+   --cmd value                 用来采集服务版本信息的命令，可以使用带管道符的shell命令 (default: "echo ''")
+   --debug, -d                 调试模式，开启则会输出采集信息，并上报一次信息到服务端 (default: false)
+   --help, -h                  show help
+
+```

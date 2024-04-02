@@ -6,7 +6,7 @@
 
 ```shell
 go mod tidy
-bo build
+go build
 ```
 
 ## 命令使用

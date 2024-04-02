@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	app2 "github.com/Hopetree/GoMonitor/app"
 	"github.com/Hopetree/GoMonitor/cmd/commands"
 	"github.com/urfave/cli/v2"
 	"os"
@@ -23,7 +24,7 @@ func (c *cmd) Execute(args []string) {
 }
 
 func newCmd() *cmd {
-	version := RuntimeVersion
+	version := app2.RuntimeVersion
 	app := &cli.App{}
 	app.Name = "GoMonitor"
 	app.Version = version

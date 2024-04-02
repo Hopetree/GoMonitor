@@ -2,6 +2,7 @@ package host
 
 import (
 	"github.com/shirou/gopsutil/disk"
+	"runtime"
 )
 
 func getDiskUsage() (uint64, uint64, error) {
@@ -12,13 +13,28 @@ func getDiskUsage() (uint64, uint64, error) {
 
 	var total, used uint64
 
-	for _, partition := range partitions {
-		usageStat, err := disk.Usage(partition.Mountpoint)
-		if err != nil {
-			continue
+	switch runtime.GOOS {
+	case "darwin":
+		for _, partition := range partitions {
+			if partition.Mountpoint == "/" {
+				usageStat, err := disk.Usage(partition.Mountpoint)
+				if err != nil {
+					continue
+				}
+				total += usageStat.Total
+				used += usageStat.Used
+			}
 		}
-		total += usageStat.Total
-		used += usageStat.Used
+	default:
+		for _, partition := range partitions {
+			usageStat, err := disk.Usage(partition.Mountpoint)
+			if err != nil {
+				continue
+			}
+			total += usageStat.Total
+			used += usageStat.Used
+		}
+
 	}
 
 	DiskTotal := total

@@ -72,10 +72,8 @@ func reportCmd(ctx *cli.Context) error {
 	for {
 		jsonData := host.GetHostInfo(interval, cmdStr)
 
-		result, err := tool.PushHttp(url, headers, jsonData)
-		if err != nil {
-			return err
-		}
+		// 非调试模式就算请求失败也不要报错，比如服务器连不上，此时重试即可
+		result, _ := tool.PushHttp(url, headers, jsonData)
 
 		if debug {
 			fmt.Println("version cmd:", cmdStr)

@@ -23,7 +23,7 @@ func (c *cmd) Execute(args []string) {
 }
 
 func newCmd() *cmd {
-	version := "0.0.1"
+	version := RuntimeVersion
 	app := &cli.App{}
 	app.Name = "GoMonitor"
 	app.Version = version

@@ -25,7 +25,9 @@ func PushHttp(url string, headers map[string]string, jsonData string) (string, e
 	}
 
 	// 断开连接
-	defer resp.Body.Close()
+	defer func() {
+		resp.Body.Close()
+	}()
 
 	// 检查响应状态码是否为 200
 	if resp.StatusCode != 200 {

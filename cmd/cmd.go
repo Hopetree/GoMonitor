@@ -25,7 +25,6 @@ func (c *cmd) Execute(args []string) {
 func newCmd() *cmd {
 	version := "0.0.1"
 	app := &cli.App{}
-	// app.EnableBashCompletion = true
 	app.Name = "GoMonitor"
 	app.Version = version
 	app.Usage = "一个简单的agent客户端，用于采集主机信息并上报到服务端"

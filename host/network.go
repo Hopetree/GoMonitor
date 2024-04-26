@@ -3,9 +3,6 @@ package host
 import (
 	"fmt"
 	"github.com/shirou/gopsutil/net"
-	"os/exec"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -54,33 +51,15 @@ func getNetworkSpeedStr() (uploadSpeedStr, downloadSpeedStr string, err error) {
 
 func getConnections() (int, int, error) {
 	var tcp, udp int
-	cmd := exec.Command("sh", "-c", "expr $(ss -t | wc -l) - 1")
 
-	// 获取命令输出
-	tcpString, err := cmd.Output()
+	tcpConnCount, err := net.Connections("tcp")
 	if err == nil {
-		tcpNum, err := strconv.Atoi(strings.TrimSpace(string(tcpString)))
-		if err == nil {
-			tcp = tcpNum
-			if tcp < 0 {
-				tcp = 0
-			}
-		}
+		tcp = len(tcpConnCount)
 	}
 
-	cmd = exec.Command("sh", "-c", "expr $(ss -u | wc -l) - 1")
-
-	// 获取命令输出
-	udpString, err := cmd.Output()
+	udpConnCount, err := net.Connections("udp")
 	if err == nil {
-		udpNum, err := strconv.Atoi(strings.TrimSpace(string(udpString)))
-		if err == nil {
-			udp = udpNum
-			if udp < 0 {
-				udp = 0
-			}
-		}
+		udp = len(udpConnCount)
 	}
-
 	return tcp, udp, nil
 }

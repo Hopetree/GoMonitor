@@ -1,9 +1,19 @@
 package host
 
 import (
+	"fmt"
 	"github.com/shirou/gopsutil/disk"
 	"runtime"
 )
+
+func contains(slice []string, target string) bool {
+	for _, s := range slice {
+		if s == target {
+			return true
+		}
+	}
+	return false
+}
 
 func getDiskUsage() (uint64, uint64, error) {
 	partitions, err := disk.Partitions(false)
@@ -26,15 +36,23 @@ func getDiskUsage() (uint64, uint64, error) {
 			}
 		}
 	default:
+		// 定义一个数组，用来忽略重复的分区，比如群晖
+		var sli []string
 		for _, partition := range partitions {
 			usageStat, err := disk.Usage(partition.Mountpoint)
 			if err != nil {
 				continue
 			}
-			total += usageStat.Total
-			used += usageStat.Used
-		}
 
+			s := fmt.Sprintf("%v-%v", usageStat.Total, usageStat.Used)
+			if contains(sli, s) {
+				continue
+			} else {
+				sli = append(sli, s)
+				total += usageStat.Total
+				used += usageStat.Used
+			}
+		}
 	}
 
 	DiskTotal := total

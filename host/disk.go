@@ -1,6 +1,7 @@
 package host
 
 import (
+	"fmt"
 	"github.com/shirou/gopsutil/disk"
 	"runtime"
 )
@@ -31,6 +32,7 @@ func getDiskUsage() (uint64, uint64, error) {
 			if err != nil {
 				continue
 			}
+			fmt.Println(partition.Mountpoint, usageStat.Total, usageStat.Used)
 			total += usageStat.Total
 			used += usageStat.Used
 		}

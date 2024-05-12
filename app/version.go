@@ -1,3 +1,3 @@
 package app
 
-const RuntimeVersion = "0.1.4"
+const RuntimeVersion = "0.1.5"

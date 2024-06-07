@@ -24,11 +24,6 @@ jobs:
           go-version: 1.21
           cache: true
 
-      - name: Replace version in version.go
-        run: |
-          tag=$(echo $GITHUB_REF | sed 's/refs\/tags\///')
-          sed -i "s/const RuntimeVersion = \".*\"/const RuntimeVersion = \"$tag\"/" app/version.go
-
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:

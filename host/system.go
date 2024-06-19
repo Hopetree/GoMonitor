@@ -1,6 +1,7 @@
 package host
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/process"
@@ -55,8 +56,17 @@ func getSystemInfo() (uint64, string, error) {
 	}
 
 	uptime := info.Uptime
+
 	systemVersion := fmt.Sprintf("%s-%s-%s-%s-%s", info.OS, info.KernelVersion,
 		info.KernelArch, info.Platform, info.PlatformVersion)
+
+	// 读取群晖系统信息
+	filename := "/etc.defaults/VERSION"
+	if info.Platform == "" && fileExists(filename) {
+		osName, osVersion := readVersionFile(filename)
+		systemVersion = fmt.Sprintf("%s-%s-%s-%s-%s", info.OS, info.KernelVersion,
+			info.KernelArch, osName, osVersion)
+	}
 
 	if isLXCContainer() {
 		uptime, _ = getLXCContainerUptime()
@@ -86,4 +96,50 @@ func getLXCContainerUptime() (uint64, error) {
 		return 0, err
 	}
 	return uint64(uptimeSeconds), nil
+}
+
+// 从文件中读取系统信息
+func readVersionFile(filePath string) (string, string) {
+	versionInfo := make(map[string]string)
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", ""
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		// 移除两边的空白字符
+		line = strings.TrimSpace(line)
+		// 跳过空行
+		if line == "" {
+			continue
+		}
+		// 分割行内容，获取键和值
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
+			// 去除两边的引号
+			value = strings.Trim(value, "\"")
+			versionInfo[key] = value
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return "", ""
+	}
+
+	osName := versionInfo["os_name"]
+	productVersion := versionInfo["productversion"]
+
+	return osName, productVersion
+}
+
+// 判断文件是否存在
+func fileExists(filePath string) bool {
+	_, err := os.Stat(filePath)
+	return !os.IsNotExist(err)
 }

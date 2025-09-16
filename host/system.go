@@ -6,17 +6,35 @@ import (
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/process"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 )
 
 func getProcessCount() (int, error) {
-	processes, err := process.Processes()
-	if err != nil {
-		return 0, err
+	switch runtime.GOOS {
+	case "linux":
+		// Linux: 直接数 /proc 下的数字目录
+		dir, err := os.ReadDir("/proc")
+		if err != nil {
+			return 0, err
+		}
+		count := 0
+		for _, entry := range dir {
+			if entry.IsDir() {
+				if _, err := strconv.Atoi(entry.Name()); err == nil {
+					count++
+				}
+			}
+		}
+		return count, nil
+	default:
+		processList, err := process.Processes()
+		if err != nil {
+			return 0, err
+		}
+		return len(processList), nil
 	}
-
-	return len(processes), nil
 }
 
 func getThreadCount() (int, error) {

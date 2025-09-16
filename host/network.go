@@ -1,8 +1,12 @@
 package host
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/shirou/gopsutil/net"
+	"os"
+	"runtime"
+	"strings"
 	"time"
 )
 
@@ -49,17 +53,44 @@ func getNetworkSpeedStr() (uploadSpeedStr, downloadSpeedStr string, err error) {
 	return uploadSpeedFormatted, downloadSpeedFormatted, nil
 }
 
-func getConnections() (int, int, error) {
-	var tcp, udp int
+func getConnections() (tcp, udp int, err error) {
+	switch runtime.GOOS {
+	case "linux":
+		// 统计 TCP 连接（只统计 ESTABLISHED）
+		tcpFile, err := os.Open("/proc/net/tcp")
+		if err == nil {
+			defer tcpFile.Close()
+			scanner := bufio.NewScanner(tcpFile)
+			scanner.Scan() // skip header
+			for scanner.Scan() {
+				fields := strings.Fields(scanner.Text())
+				if len(fields) >= 4 && fields[3] == "01" { // 01 = ESTABLISHED
+					tcp++
+				}
+			}
+		}
 
-	tcpConnCount, err := net.Connections("tcp")
-	if err == nil {
-		tcp = len(tcpConnCount)
+		// 统计 UDP 连接
+		udpFile, err := os.Open("/proc/net/udp")
+		if err == nil {
+			defer udpFile.Close()
+			scanner := bufio.NewScanner(udpFile)
+			scanner.Scan() // skip header
+			for scanner.Scan() {
+				udp++
+			}
+		}
+
+	default:
+		tcpConnCount, err := net.Connections("tcp")
+		if err == nil {
+			tcp = len(tcpConnCount)
+		}
+		udpConnCount, err := net.Connections("udp")
+		if err == nil {
+			udp = len(udpConnCount)
+		}
 	}
 
-	udpConnCount, err := net.Connections("udp")
-	if err == nil {
-		udp = len(udpConnCount)
-	}
 	return tcp, udp, nil
 }

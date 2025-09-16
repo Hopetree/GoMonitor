@@ -38,21 +38,48 @@ func getProcessCount() (int, error) {
 }
 
 func getThreadCount() (int, error) {
-	processes, err := process.Processes()
-	if err != nil {
-		return 0, err
-	}
-
-	var totalThreads int
-	for _, proc := range processes {
-		threadCount, err := proc.NumThreads()
+	switch runtime.GOOS {
+	case "linux":
+		// Linux 优化路径
+		dir, err := os.ReadDir("/proc")
 		if err != nil {
-			continue
+			return 0, err
 		}
-		totalThreads += int(threadCount)
-	}
 
-	return totalThreads, nil
+		totalThreads := 0
+		for _, entry := range dir {
+			if !entry.IsDir() {
+				continue
+			}
+			if _, err := strconv.Atoi(entry.Name()); err != nil {
+				continue
+			}
+
+			taskDir := "/proc/" + entry.Name() + "/task"
+			tasks, err := os.ReadDir(taskDir)
+			if err != nil {
+				continue
+			}
+			totalThreads += len(tasks)
+		}
+		return totalThreads, nil
+
+	default:
+		processes, err := process.Processes()
+		if err != nil {
+			return 0, err
+		}
+
+		totalThreads := 0
+		for _, proc := range processes {
+			count, err := proc.NumThreads()
+			if err != nil {
+				continue
+			}
+			totalThreads += int(count)
+		}
+		return totalThreads, nil
+	}
 }
 
 func getProcessAndThread() (int, int, error) {
